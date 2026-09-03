@@ -45,10 +45,25 @@
 const ORGS=['Личное','Продажи','Маркетинг','Найм','Финансы','IT / Битрикс24','Операционная деятельность'];
 const STATUSES=['Входящие','Запланировано','В работе','Ожидает'];
 const KEY='sergey_task_board_v1';
-const initial=[{id:'demo-1',title:'Добавить первую реальную задачу',org:'Личное',status:'Входящие',priority:'Обычный',due:'',note:'Нажмите на карточку, чтобы отредактировать',created:new Date().toISOString(),updated:new Date().toISOString()}];
+const initial=[];
+const INBOX_SEED_KEY='sergey_tasks_seed_2026_09_03_1';
+const inboxSeed=[
+  {id:'task-org-platrum',title:'Сделать оргструктуру в Platrum',org:'Операционная деятельность',status:'Входящие',priority:'Обычный',due:'',note:'',created:new Date().toISOString(),updated:new Date().toISOString()},
+  {id:'task-sales-process',title:'Описать бизнес-процесс компании от лида до продажи',org:'Продажи',status:'Входящие',priority:'Обычный',due:'',note:'',created:new Date().toISOString(),updated:new Date().toISOString()}
+];
 let tasks=load(),activeOrg='Все задачи',activeFilter='all',editingId=null;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||initial}catch{return initial}}
+function load(){
+  let stored=[];
+  try{stored=JSON.parse(localStorage.getItem(KEY))||[]}catch{}
+  stored=stored.filter(t=>t.id!=='demo-1');
+  if(!localStorage.getItem(INBOX_SEED_KEY)){
+    for(const task of inboxSeed)if(!stored.some(t=>t.id===task.id||t.title===task.title))stored.push(task);
+    localStorage.setItem(KEY,JSON.stringify(stored));
+    localStorage.setItem(INBOX_SEED_KEY,'1');
+  }
+  return stored.length?stored:initial;
+}
 function save(){localStorage.setItem(KEY,JSON.stringify(tasks))}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function visible(t){if(activeOrg!=='Все задачи'&&t.org!==activeOrg)return false;const q=$('#search').value.trim().toLowerCase();if(q&&!(`${t.title} ${t.note||''} ${t.org}`).toLowerCase().includes(q))return false;if(activeFilter==='today')return t.due===today();if(activeFilter==='overdue')return t.due&&t.due<today();return true}
